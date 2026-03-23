@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>いいおっちの1日の動き方</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #faf9f6;
+    --s1: #ffffff;
+    --s2: #f4f2ed;
+    --border: #e8e3da;
+    --border2: #d4cec3;
+    --ink: #1c1814;
+    --ink2: #4a4238;
+    --ink3: #9a9088;
+    --morning: #f59e0b;
+    --morning-dim: rgba(245,158,11,0.1);
+    --noon: #06b6d4;
+    --noon-dim: rgba(6,182,212,0.1);
+    --night: #7c3aed;
+    --night-dim: rgba(124,58,237,0.1);
+    --weekend: #059669;
+    --weekend-dim: rgba(5,150,105,0.1);
+    --red: #dc2626;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans JP',sans-serif;
+    min-height:100vh;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--ink);
+    padding: 48px 28px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content:'';
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 40px,
+      rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px
+    );
+  }
+
+  .hero-inner { max-width:900px; margin:0 auto; position:relative; }
+
+  .hero-eyebrow {
+    font-family:'DM Mono',monospace;
+    font-size:11px; letter-spacing:3px; color:var(--morning);
+    text-transform:uppercase; margin-bottom:14px;
+  }
+
+  .hero h1 {
+    font-family:'Syne',sans-serif;
+    font-size:clamp(28px,5vw,48px);
+    font-weight:800; color:#fff; line-height:1.1;
+    margin-bottom:14px;
+  }
+
+  .hero h1 span { color:var(--morning); }
+
+  .hero-sub {
+    font-size:14px; color:rgba(255,255,255,0.5);
+    line-height:1.7; max-width:560px;
+  }
+
+  /* ── CONTENT ── */
+  .content { max-width:900px; margin:0 auto; padding:40px 28px 80px; }
+
+  /* ── BOOKMARK SECTION ── */
+  .section { margin-bottom:48px; }
+
+  .section-head {
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:20px;
+  }
+
+  .section-icon {
+    width:36px; height:36px; border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px; flex-shrink:0;
+  }
+
+  .section-title {
+    font-family:'Syne',sans-serif;
+    font-size:20px; font-weight:800;
+  }
+
+  .section-sub { font-size:12px; color:var(--ink3); margin-top:2px; }
+
+  /* bookmark cards */
+  .bookmark-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:12px;
+  }
+
+  .bm-card {
+    background:var(--s1);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+    display:flex; align-items:flex-start; gap:12px;
+    transition:all .2s;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .bm-card::before {
+    content:'';
+    position:absolute; top:0;left:0; bottom:0;
+    width:3px;
+    background:var(--bm-color);
+  }
+
+  .bm-card:hover { border-color:var(--bm-color); transform:translateX(2px); box-shadow:2px 0 12px rgba(0,0,0,0.06); }
+
+  .bm-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
+
+  .bm-name { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:3px; }
+  .bm-desc { font-size:12px; color:var(--ink3); line-height:1.5; }
+  .bm-device {
+    margin-top:8px;
+    display:inline-flex; align-items:center; gap:4px;
+    font-family:'DM Mono',monospace; font-size:10px;
+    padding:2px 8px; border-radius:20px;
+    background:var(--s2); color:var(--ink3);
+  }
+
+  .priority-badge {
+    position:absolute; top:12px; right:12px;
+    font-family:'DM Mono',monospace; font-size:9px;
+    padding:2px 7px; border-radius:20px;
+    background:var(--bm-color); color:#fff;
+    opacity:0.85;
+  }
+
+  /* ── TIMELINE ── */
+  .timeline { position:relative; }
+
+  .timeline::before {
+    content:'';
+    position:absolute; left:28px; top:0; bottom:0;
+    width:1px; background:var(--border2);
+  }
+
+  .tl-block { position:relative; padding-left:68px; margin-bottom:28px; }
+
+  .tl-dot {
+    position:absolute; left:20px; top:4px;
+    width:17px; height:17px; border-radius:50%;
+    background:var(--tl-color);
+    border:3px solid var(--bg);
+    box-shadow:0 0 0 2px var(--tl-color);
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;
+  }
+
+  .tl-time {
+    font-family:'DM Mono',monospace;
+    font-size:11px; color:var(--tl-color);
+    margin-bottom:6px; font-weight:500;
+    letter-spacing:0.5px;
+  }
+
+  .tl-card {
+    background:var(--s1);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+    border-top:2px solid var(--tl-color);
+  }
+
+  .tl-title { font-size:15px; font-weight:700; margin-bottom:6px; }
+  .tl-desc { font-size:13px; color:var(--ink2); line-height:1.7; margin-bottom:10px; }
+
+  .tl-actions { display:flex; flex-direction:column; gap:6px; }
+
+  .tl-action {
+    display:flex; align-items:baseline; gap:8px;
+    font-size:12px; color:var(--ink2); line-height:1.5;
+    padding:6px 10px; border-radius:7px; background:var(--s2);
+  }
+
+  .tl-action .agent-tag {
+    font-family:'DM Mono',monospace; font-size:10px;
+    padding:2px 8px; border-radius:20px;
+    background:var(--tl-color); color:#fff;
+    white-space:nowrap; flex-shrink:0; opacity:.85;
+  }
+
+  .tl-time-chip {
+    margin-left:auto; flex-shrink:0;
+    font-family:'DM Mono',monospace; font-size:10px;
+    color:var(--ink3);
+  }
+
+  /* device badge */
+  .device-row { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .device-badge {
+    font-family:'DM Mono',monospace; font-size:10px;
+    padding:3px 9px; border-radius:20px;
+    border:1px solid var(--border2);
+    color:var(--ink3);
+  }
+
+  /* ── WEEKLY ── */
+  .weekly-grid {
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:8px;
+  }
+
+  @media(max-width:700px){ .weekly-grid { grid-template-columns:repeat(4,1fr); } }
+
+  .day-card {
+    background:var(--s1);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 10px;
+    text-align:center;
+  }
+
+  .day-card.highlight {
+    background:var(--weekend-dim);
+    border-color:var(--weekend);
+  }
+
+  .day-name {
+    font-family:'DM Mono',monospace;
+    font-size:10px; color:var(--ink3);
+    margin-bottom:8px; letter-spacing:1px;
+  }
+
+  .day-card.highlight .day-name { color:var(--weekend); }
+
+  .day-task {
+    font-size:11px; color:var(--ink2);
+    line-height:1.5; text-align:left;
+    margin-bottom:4px;
+  }
+
+  .day-agent {
+    font-size:10px; color:var(--ink3);
+    font-family:'DM Mono',monospace;
+    margin-top:6px;
+  }
+
+  /* ── RULES ── */
+  .rules-list { display:flex; flex-direction:column; gap:10px; }
+
+  .rule-item {
+    background:var(--s1); border:1px solid var(--border);
+    border-radius:10px; padding:14px 18px;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+
+  .rule-num {
+    font-family:'Syne',sans-serif; font-size:22px; font-weight:800;
+    color:var(--morning); line-height:1; flex-shrink:0;
+    width:28px; text-align:center;
+  }
+
+  .rule-body { flex:1; }
+  .rule-title { font-size:14px; font-weight:700; margin-bottom:3px; }
+  .rule-desc { font-size:12px; color:var(--ink3); line-height:1.6; }
+
+  /* animations */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .fadeUp { animation:fadeUp .5s ease both; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Daily Playbook</div>
+    <h1>いいおっちの<br><span>1日の動き方</span></h1>
+    <p class="hero-sub">TMK勤務＋副業コンサルを両立するための、エージェント活用ルーティン完全ガイド。どのファイルをブックマークして、いつ何を使うかを整理しました。</p>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ① ブックマーク設定 -->
+  <div class="section fadeUp">
+    <div class="section-head">
+      <div class="section-icon" style="background:#fef3c7">🔖</div>
+      <div>
+        <div class="section-title">まずここをブックマーク</div>
+        <div class="section-sub">スマホ・PCそれぞれのホーム画面に追加する5本</div>
+      </div>
+    </div>
+
+    <div class="bookmark-grid">
+
+      <div class="bm-card" style="--bm-color:var(--morning)">
+        <div class="priority-badge">最重要</div>
+        <div class="bm-icon">🏠</div>
+        <div>
+          <div class="bm-name">HQ司令室</div>
+          <div class="bm-desc">毎日ここから始める。全エージェントへのゲートウェイ。案件数・売上もここで確認。</div>
+          <div class="bm-device">📱 スマホHOME登録推奨</div>
+        </div>
+      </div>
+
+      <div class="bm-card" style="--bm-color:var(--noon)">
+        <div class="priority-badge">昼休み用</div>
+        <div class="bm-icon">📣</div>
+        <div>
+          <div class="bm-name">集客エージェント</div>
+          <div class="bm-desc">昼休みにX投稿案を5本まとめ生成→夜に1本投稿。スマホで完結できる。</div>
+          <div class="bm-device">📱 スマホ向き</div>
+        </div>
+      </div>
+
+      <div class="bm-card" style="--bm-color:var(--night)">
+        <div class="priority-badge">夜PC用</div>
+        <div class="bm-icon">💼</div>
+        <div>
+          <div class="bm-name">提案書エージェント</div>
+          <div class="bm-desc">案件相談が来たらすぐ開く。ヒアリング直後に入力→ドラフト完成まで10分。</div>
+          <div class="bm-device">💻 PC推奨</div>
+        </div>
+      </div>
+
+      <div class="bm-card" style="--bm-color:var(--weekend)">
+        <div class="priority-badge">週次</div>
+        <div class="bm-icon">📊</div>
+        <div>
+          <div class="bm-name">経営管理エージェント</div>
+          <div class="bm-desc">案件・売上を記録する。週1回金曜夜か日曜に棚卸し。AIインサイトで振り返り。</div>
+          <div class="bm-device">💻 PC推奨</div>
+        </div>
+      </div>
+
+      <div class="bm-card" style="--bm-color:#ef4444">
+        <div class="priority-badge">今月限定</div>
+        <div class="bm-icon">✅</div>
+        <div>
+          <div class="bm-name">Phase1 タスクリスト</div>
+          <div class="bm-desc">開業届・SNS開設など今月中にやること。完了したらチェック。達成率が上がる。</div>
+          <div class="bm-device">📱 どちらでも</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ② 平日の動き -->
+  <div class="section fadeUp" style="animation-delay:.1s">
+    <div class="section-head">
+      <div class="section-icon" style="background:#e0f2fe">📅</div>
+      <div>
+        <div class="section-title">平日の動き（月〜金）</div>
+        <div class="section-sub">隙間時間を最大活用する3ステップルーティン</div>
+      </div>
+    </div>
+
+    <div class="timeline">
+
+      <!-- 朝 -->
+      <div class="tl-block">
+        <div class="tl-dot" style="--tl-color:var(--morning)"></div>
+        <div class="tl-time" style="--tl-color:var(--morning)">☀️ 出勤前 07:00〜07:30（自宅・PC）</div>
+        <div class="tl-card" style="--tl-color:var(--morning)">
+          <div class="tl-title">朝の仕込み（週2〜3回でOK）</div>
+          <div class="tl-desc">一番頭が動く時間。10〜15分で今日のX投稿案をストックしておく。</div>
+          <div class="tl-actions">
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--morning)">集客</span>
+              今週のテーマを入力→5本まとめ生成→メモアプリにストック
+              <span class="tl-time-chip">10分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--morning)">HQ</span>
+              Phase1タスクを1つ消化（開業届・口座開設など手続き系）
+              <span class="tl-time-chip">15分</span>
+            </div>
+          </div>
+          <div class="device-row">
+            <div class="device-badge">💻 PC</div>
+            <div class="device-badge">週2〜3回</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 昼 -->
+      <div class="tl-block">
+        <div class="tl-dot" style="--tl-color:var(--noon)"></div>
+        <div class="tl-time" style="--tl-color:var(--noon)">🌞 昼休み 12:00〜12:45（スマホ）</div>
+        <div class="tl-card" style="--tl-color:var(--noon)">
+          <div class="tl-title">発信＆インプット（毎日）</div>
+          <div class="tl-desc">食事しながらスマホで完結。X投稿を1本送る＋Xで業界情報をスクロール。</div>
+          <div class="tl-actions">
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--noon)">集客</span>
+              朝にストックした投稿案から1本選んでX投稿
+              <span class="tl-time-chip">5分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--noon)">学習</span>
+              AI/DXのXアカウント・newsをスクロールしてネタメモ
+              <span class="tl-time-chip">20分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--noon)">HQ</span>
+              案件メッセージが来てたらHQオーケストレーターに壁打ち
+              <span class="tl-time-chip">必要時</span>
+            </div>
+          </div>
+          <div class="device-row">
+            <div class="device-badge">📱 スマホ</div>
+            <div class="device-badge">毎日</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 夜 -->
+      <div class="tl-block">
+        <div class="tl-dot" style="--tl-color:var(--night)"></div>
+        <div class="tl-time" style="--tl-color:var(--night)">🌙 帰宅後 21:00〜22:30（PC）</div>
+        <div class="tl-card" style="--tl-color:var(--night)">
+          <div class="tl-title">副業メイン作業（週2〜3回）</div>
+          <div class="tl-desc">TMKの疲れを考慮して週2〜3回にとどめる。毎日やろうとしないことが継続の秘訣。</div>
+          <div class="tl-actions">
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--night)">提案書</span>
+              案件ヒアリングがあった日→その日中にドラフト作成
+              <span class="tl-time-chip">20分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--night)">納品支援</span>
+              翌日WS・MTGがある場合→アジェンダ・議事録テンプレ準備
+              <span class="tl-time-chip">15分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--night)">集客</span>
+              note記事を書く日（週1）→構成を生成してから肉付け
+              <span class="tl-time-chip">60分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:var(--night)">HQ</span>
+              ビザスク・Workshipの案件をチェック＋返信
+              <span class="tl-time-chip">10分</span>
+            </div>
+          </div>
+          <div class="device-row">
+            <div class="device-badge">💻 PC</div>
+            <div class="device-badge">週2〜3回</div>
+            <div class="device-badge">疲れてる日はスキップOK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 車内音声 -->
+      <div class="tl-block">
+        <div class="tl-dot" style="--tl-color:#6b7280"></div>
+        <div class="tl-time" style="--tl-color:#6b7280">🚗 通勤中（音声インプット）</div>
+        <div class="tl-card" style="--tl-color:#6b7280">
+          <div class="tl-title">耳からのインプット（毎日）</div>
+          <div class="tl-desc">エージェントは使えないが、発信ネタ・思考を育てる重要な時間。</div>
+          <div class="tl-actions">
+            <div class="tl-action">
+              <span class="agent-tag" style="background:#6b7280">インプット</span>
+              AI/DX系Podcast・YouTube音声（Jobs to be Done、DXPodcastなど）
+              <span class="tl-time-chip">片道分</span>
+            </div>
+            <div class="tl-action">
+              <span class="agent-tag" style="background:#6b7280">思考整理</span>
+              「今週発信したいこと」を声に出して整理→赤信号でメモ
+              <span class="tl-time-chip">帰り道</span>
+            </div>
+          </div>
+          <div class="device-row">
+            <div class="device-badge">🚗 カーナビ or スマホスピーカー</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ③ 週間カレンダー -->
+  <div class="section fadeUp" style="animation-delay:.2s">
+    <div class="section-head">
+      <div class="section-icon" style="background:#d1fae5">📆</div>
+      <div>
+        <div class="section-title">1週間のリズム</div>
+        <div class="section-sub">曜日ごとにやることを決めると迷いがなくなる</div>
+      </div>
+    </div>
+
+    <div class="weekly-grid">
+      <div class="day-card">
+        <div class="day-name">MON</div>
+        <div class="day-task">今週の発信テーマを決める</div>
+        <div class="day-task">X投稿5本まとめ生成</div>
+        <div class="day-agent">集客</div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">TUE</div>
+        <div class="day-task">昼：X投稿1本</div>
+        <div class="day-task">夜：ビザスク確認</div>
+        <div class="day-agent">HQ</div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">WED</div>
+        <div class="day-task">昼：X投稿1本</div>
+        <div class="day-task">夜：note記事構成生成→執筆</div>
+        <div class="day-agent">集客</div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">THU</div>
+        <div class="day-task">昼：X投稿1本</div>
+        <div class="day-task">夜：案件対応・提案書</div>
+        <div class="day-agent">提案書</div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">FRI</div>
+        <div class="day-task">昼：X投稿1本</div>
+        <div class="day-task">夜：週次振り返り・売上記録</div>
+        <div class="day-agent">経営管理</div>
+      </div>
+      <div class="day-card highlight">
+        <div class="day-name">SAT</div>
+        <div class="day-task">メイン稼働日</div>
+        <div class="day-task">案件・WS・ロードマップ作成</div>
+        <div class="day-agent">納品支援 / 提案書</div>
+      </div>
+      <div class="day-card highlight">
+        <div class="day-name">SUN</div>
+        <div class="day-task">翌週仕込み</div>
+        <div class="day-task">Phase1タスク・note仕上げ</div>
+        <div class="day-agent">HQ / 集客</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 鉄則 -->
+  <div class="section fadeUp" style="animation-delay:.3s">
+    <div class="section-head">
+      <div class="section-icon" style="background:#fef3c7">⚡</div>
+      <div>
+        <div class="section-title">続けるための5つの鉄則</div>
+        <div class="section-sub">TMK本業を犠牲にしないための守り方</div>
+      </div>
+    </div>
+
+    <div class="rules-list">
+      <div class="rule-item">
+        <div class="rule-num">1</div>
+        <div class="rule-body">
+          <div class="rule-title">「毎日やる」は禁止。週2〜3回ペースを守る</div>
+          <div class="rule-desc">TMKが繁忙期の時は副業を意図的に減らす。本業を犠牲にすると持続できない。エージェントは「やろうと思った時に即動ける」のが強み。毎日使わなくていい。</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">2</div>
+        <div class="rule-body">
+          <div class="rule-title">HQを「毎朝30秒だけ」開く習慣をつける</div>
+          <div class="rule-desc">案件数・Phase1進捗をチラ見するだけでOK。「見る」習慣が「動く」習慣につながる。スマホホーム画面の1ページ目に置くのが最重要。</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">3</div>
+        <div class="rule-body">
+          <div class="rule-title">X投稿は「月曜まとめ生成→昼1本投稿」で回す</div>
+          <div class="rule-desc">毎日ゼロから考えると続かない。月曜の朝に集客エージェントで5本作り置きすれば、昼休みは5分でポストできる。ストックを作る日と使う日を分ける。</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">4</div>
+        <div class="rule-body">
+          <div class="rule-title">案件ヒアリングの当日中に提案書ドラフトを送る</div>
+          <div class="rule-desc">ヒアリングからドラフト提出まで24時間以内が信頼構築の決め手。夜にエージェントを使えば20分で完成する。これだけで「動きが速い」という印象が定着する。</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">5</div>
+        <div class="rule-body">
+          <div class="rule-title">金曜夜に「週次5分振り返り」を経営管理に記録する</div>
+          <div class="rule-desc">今週の案件・売上・活動を経営管理エージェントに入力してAIインサイトをもらう。記録が溜まると「自分の事業が動いている感」が出てモチベーションが維持できる。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

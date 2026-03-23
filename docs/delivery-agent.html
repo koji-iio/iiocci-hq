@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>納品支援エージェント — IIOCCI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #f0fdf8;
+    --s1: #ffffff;
+    --s2: #e8faf3;
+    --border: #d1f5e6;
+    --border2: #a7e8cc;
+    --ink: #0f2b20;
+    --ink2: #2d6a4a;
+    --ink3: #7ab99a;
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.1);
+    --teal: #0d9488;
+    --teal-dim: rgba(13,148,136,0.1);
+    --blue: #2563eb;
+    --blue-dim: rgba(37,99,235,0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217,119,6,0.1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font-family:'Noto Sans JP',sans-serif; min-height:100vh; }
+
+  .nav {
+    background:var(--s1); border-bottom:1px solid var(--border);
+    padding:0 28px; display:flex; align-items:center;
+    position:sticky; top:0; z-index:100;
+  }
+  .nav-brand { display:flex; align-items:center; gap:10px; padding:14px 0; margin-right:28px; }
+  .nav-icon { width:30px;height:30px; background:var(--green); border-radius:8px; display:flex;align-items:center;justify-content:center; font-size:15px; }
+  .nav-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; }
+  .nav-tabs { display:flex; }
+  .tab { padding:15px 16px; font-size:13px; font-weight:500; color:var(--ink3); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
+  .tab:hover { color:var(--ink); }
+  .tab.active { color:var(--green); border-bottom-color:var(--green); font-weight:700; }
+  .nav-back { margin-left:auto; font-size:12px; color:var(--ink3); cursor:pointer; text-decoration:none; padding:6px 12px; border:1px solid var(--border2); border-radius:7px; transition:all .15s; }
+  .nav-back:hover { color:var(--green); border-color:var(--green); }
+
+  .main { max-width:1100px; margin:0 auto; padding:28px; }
+  .two-col { display:grid; grid-template-columns:340px 1fr; gap:20px; }
+  @media(max-width:900px){ .two-col { grid-template-columns:1fr; } }
+
+  .panel { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:22px; }
+  .panel-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--ink3); text-transform:uppercase; margin-bottom:16px; display:flex;align-items:center;gap:8px; }
+  .panel-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:12px; font-weight:500; color:var(--ink2); margin-bottom:5px; }
+  .field input,.field select,.field textarea {
+    width:100%; padding:9px 12px; border:1px solid var(--border2); border-radius:8px;
+    font-size:13px; font-family:'Noto Sans JP',sans-serif; outline:none;
+    background:var(--bg); color:var(--ink); transition:border-color .15s; resize:vertical;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus { border-color:var(--green); box-shadow:0 0 0 2px var(--green-dim); }
+  .field textarea { min-height:70px; }
+
+  .gen-btn {
+    width:100%; padding:13px; background:var(--green); border:none; border-radius:10px;
+    color:#fff; font-family:'Syne',sans-serif; font-size:15px; font-weight:800;
+    cursor:pointer; transition:all .2s; margin-top:6px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .gen-btn:hover { background:#047857; transform:translateY(-1px); }
+  .gen-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .spinner { width:15px;height:15px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none; }
+  .gen-btn.loading .spinner { display:block; }
+  .gen-btn.loading .btn-txt { display:none; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .output-area { min-height:400px; }
+  .placeholder-state { height:400px; display:flex;flex-direction:column;align-items:center;justify-content:center; gap:12px; color:var(--ink3); text-align:center; }
+  .placeholder-state .p-icon { font-size:40px; opacity:.4; }
+  .placeholder-state p { font-size:13px; line-height:1.6; max-width:260px; }
+
+  /* Output card */
+  .out-card { background:var(--s1); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:fadeUp .4s ease both; }
+  .out-card-header { padding:16px 20px; border-bottom:1px solid var(--border); background:var(--s2); display:flex;align-items:center;justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .out-card-title { font-size:14px; font-weight:700; }
+  .copy-btn { padding:5px 12px; border:1px solid var(--border2); border-radius:7px; background:transparent; color:var(--ink3); font-size:12px; cursor:pointer; transition:all .15s; font-family:'Noto Sans JP',sans-serif; }
+  .copy-btn:hover { border-color:var(--green); color:var(--green); }
+
+  .out-sections { padding:20px; display:flex; flex-direction:column; gap:16px; }
+  .out-sec { padding:14px 16px; background:var(--bg); border-radius:10px; border-left:3px solid var(--green); animation:fadeUp .3s ease both; }
+  .out-sec-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--green); text-transform:uppercase; margin-bottom:6px; }
+  .out-sec-body { font-size:13px; line-height:1.8; color:var(--ink); white-space:pre-wrap; }
+
+  /* Minutes specific */
+  .minutes-item { padding:10px 14px; background:var(--bg); border-radius:8px; border:1px solid var(--border); margin-bottom:8px; animation:fadeUp .3s ease both; }
+  .minutes-item:last-child { margin-bottom:0; }
+  .mi-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--teal); margin-bottom:4px; letter-spacing:1px; }
+  .mi-body { font-size:13px; line-height:1.7; color:var(--ink); white-space:pre-wrap; }
+
+  .skeleton { background:linear-gradient(90deg,var(--s2) 25%,var(--border) 50%,var(--s2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:6px; height:14px; margin-bottom:8px; }
+  .skeleton.wide{width:100%} .skeleton.med{width:70%} .skeleton.short{width:40%}
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  .page { display:none; }
+  .page.active { display:block; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand">
+    <div class="nav-icon">🔧</div>
+    <div class="nav-title">納品支援エージェント</div>
+  </div>
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab('ws',this)">WSアジェンダ設計</div>
+    <div class="tab" onclick="switchTab('minutes',this)">議事録整理</div>
+    <div class="tab" onclick="switchTab('roadmap',this)">ロードマップ作成</div>
+  </div>
+  <a class="nav-back" href="index.html">← HQに戻る</a>
+</div>
+
+<div class="main">
+
+  <!-- WS設計 -->
+  <div class="page active" id="page-ws">
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div class="panel-label">ワークショップ設定</div>
+          <div class="field"><label>クライアント名</label><input type="text" id="wsClient" placeholder="例：株式会社〇〇"></div>
+          <div class="field"><label>WS目的・ゴール</label><textarea id="wsGoal" placeholder="例：生成AI活用の優先施策を現場と経営で合意する"></textarea></div>
+          <div class="field"><label>参加者構成</label><input type="text" id="wsMembers" placeholder="例：経営層3名・現場リーダー5名・DX担当2名"></div>
+          <div class="field"><label>時間・形式</label>
+            <select id="wsDuration">
+              <option>半日（3時間）</option>
+              <option>1日（6時間）</option>
+              <option>2時間（オンライン）</option>
+              <option>1時間（スポット）</option>
+            </select>
+          </div>
+          <div class="field"><label>現状・課題の背景</label><textarea id="wsContext" placeholder="例：AI活用の機運はあるが部門間で優先度認識がバラバラ"></textarea></div>
+          <button class="gen-btn" id="wsBtn" onclick="generateWS()">
+            <div class="spinner"></div><span class="btn-txt">✦ アジェンダを設計する</span>
+          </button>
+        </div>
+      </div>
+      <div class="output-area" id="wsOutput">
+        <div class="placeholder-state"><div class="p-icon">🗓️</div><p>ワークショップ情報を入力してアジェンダを自動設計します</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 議事録 -->
+  <div class="page" id="page-minutes">
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div class="panel-label">議事録設定</div>
+          <div class="field"><label>会議名・日付</label><input type="text" id="mtgName" placeholder="例：AI活用推進キックオフ会議 2025/4/1"></div>
+          <div class="field"><label>参加者</label><input type="text" id="mtgMembers" placeholder="例：田中部長・鈴木課長・佐藤（自分）"></div>
+          <div class="field"><label>生メモ・発言記録を貼り付け</label><textarea id="mtgRaw" style="min-height:160px" placeholder="例：
+・AI活用の現状整理→まず業務棚卸から
+・推進体制：田中さんが責任者、現場代表は鈴木さん
+・来週までにユースケース候補を各部門から3つ提出
+・次回MTG：4/8 14:00"></textarea></div>
+          <button class="gen-btn" id="mtgBtn" onclick="generateMinutes()">
+            <div class="spinner"></div><span class="btn-txt">✦ 議事録を整理する</span>
+          </button>
+        </div>
+      </div>
+      <div class="output-area" id="minutesOutput">
+        <div class="placeholder-state"><div class="p-icon">📝</div><p>生メモを貼り付けると議事録形式に自動整理します</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ロードマップ -->
+  <div class="page" id="page-roadmap">
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div class="panel-label">ロードマップ設定</div>
+          <div class="field"><label>クライアント名</label><input type="text" id="rmClient" placeholder="例：株式会社〇〇"></div>
+          <div class="field"><label>目指す状態（6〜12ヶ月後）</label><textarea id="rmGoal" placeholder="例：主要3部門でAIツールが定着、月30時間の業務削減"></textarea></div>
+          <div class="field"><label>現状・課題</label><textarea id="rmCurrent" placeholder="例：AI活用ゼロ、推進担当者1名、現場リテラシー低"></textarea></div>
+          <div class="field"><label>優先施策・取り組み（分かっている範囲で）</label><textarea id="rmActions" placeholder="例：Copilot導入、業務棚卸WS、推進体制構築"></textarea></div>
+          <div class="field"><label>期間</label>
+            <select id="rmPeriod">
+              <option>3ヶ月</option>
+              <option>6ヶ月</option>
+              <option selected>12ヶ月</option>
+            </select>
+          </div>
+          <button class="gen-btn" id="rmBtn" onclick="generateRoadmap()">
+            <div class="spinner"></div><span class="btn-txt">✦ ロードマップを作成する</span>
+          </button>
+        </div>
+      </div>
+      <div class="output-area" id="roadmapOutput">
+        <div class="placeholder-state"><div class="p-icon">🗺️</div><p>情報を入力してフェーズ別ロードマップを自動作成します</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchTab(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  function showSkeleton(id) {
+    document.getElementById(id).innerHTML = `<div class="panel"><div class="skeleton wide"></div><div class="skeleton med"></div><div class="skeleton wide"></div><div class="skeleton short"></div></div>`;
+  }
+
+  function showError(id, msg) {
+    document.getElementById(id).innerHTML = `<div class="panel" style="color:#ef4444;font-size:13px">エラー: ${msg}</div>`;
+  }
+
+  async function callClaude(prompt) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '';
+    return JSON.parse(raw.replace(/```json|```/g,'').trim());
+  }
+
+  // ── WSアジェンダ ──
+  async function generateWS() {
+    const goal = document.getElementById('wsGoal').value.trim();
+    if (!goal) { alert('ゴールを入力してください'); return; }
+    const btn = document.getElementById('wsBtn');
+    btn.disabled = true; btn.classList.add('loading');
+    showSkeleton('wsOutput');
+
+    try {
+      const parsed = await callClaude(`あなたはDX・生成AI推進コンサルタント「いいおっち」のワークショップ設計AIです。
+
+クライアント：${document.getElementById('wsClient').value || '未記入'}
+ゴール：${goal}
+参加者：${document.getElementById('wsMembers').value || '未記入'}
+時間・形式：${document.getElementById('wsDuration').value}
+背景・課題：${document.getElementById('wsContext').value || '未記入'}
+
+以下のJSONのみ返してください：
+{
+  "title": "WS名称",
+  "objective": "目的・期待成果（1文）",
+  "agenda": [
+    {"time": "開始〜終了", "title": "セッション名", "method": "進め方（ファシリテーション手法）", "output": "このセッションで得るもの"}
+  ],
+  "facilitation_tips": ["ファシリのコツ1","コツ2","コツ3"],
+  "preparation": ["事前準備1","準備2"]
+}`);
+
+      const allText = `# ${parsed.title}\n目的：${parsed.objective}\n\n` +
+        parsed.agenda.map(a=>`${a.time} ｜ ${a.title}\n進め方：${a.method}\n成果物：${a.output}`).join('\n\n') +
+        `\n\n【ファシリのコツ】\n${parsed.facilitation_tips.join('\n')}\n\n【事前準備】\n${parsed.preparation.join('\n')}`;
+
+      document.getElementById('wsOutput').innerHTML = `
+        <div class="out-card">
+          <div class="out-card-header">
+            <div class="out-card-title">${parsed.title}</div>
+            <button class="copy-btn" onclick="copyText(\`${allText.replace(/`/g,'\\`')}\`,this)">全文コピー</button>
+          </div>
+          <div class="out-sections">
+            <div class="out-sec"><div class="out-sec-label">目的・期待成果</div><div class="out-sec-body">${parsed.objective}</div></div>
+            <div class="out-sec" style="border-left-color:var(--teal)">
+              <div class="out-sec-label" style="color:var(--teal)">アジェンダ</div>
+              ${parsed.agenda.map((a,i)=>`
+                <div style="padding:10px 0;border-bottom:1px dashed var(--border);animation-delay:${i*.05}s" class="fadeUp">
+                  <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);margin-bottom:3px">${a.time}</div>
+                  <div style="font-weight:700;font-size:14px;margin-bottom:4px">${a.title}</div>
+                  <div style="font-size:12px;color:var(--ink2)">進め方：${a.method}</div>
+                  <div style="font-size:12px;color:var(--green);margin-top:2px">▶ ${a.output}</div>
+                </div>`).join('')}
+            </div>
+            <div class="out-sec" style="border-left-color:var(--amber)">
+              <div class="out-sec-label" style="color:var(--amber)">ファシリのコツ</div>
+              <div class="out-sec-body">${parsed.facilitation_tips.map(t=>`• ${t}`).join('\n')}</div>
+            </div>
+            <div class="out-sec">
+              <div class="out-sec-label">事前準備チェック</div>
+              <div class="out-sec-body">${parsed.preparation.map(p=>`☐ ${p}`).join('\n')}</div>
+            </div>
+          </div>
+        </div>`;
+    } catch(e) { showError('wsOutput', e.message); }
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+
+  // ── 議事録 ──
+  async function generateMinutes() {
+    const raw = document.getElementById('mtgRaw').value.trim();
+    if (!raw) { alert('生メモを入力してください'); return; }
+    const btn = document.getElementById('mtgBtn');
+    btn.disabled = true; btn.classList.add('loading');
+    showSkeleton('minutesOutput');
+
+    try {
+      const parsed = await callClaude(`以下の生メモを議事録形式に整理してください。JSONのみ返すこと。
+
+会議名：${document.getElementById('mtgName').value || '未記入'}
+参加者：${document.getElementById('mtgMembers').value || '未記入'}
+生メモ：
+${raw}
+
+{
+  "summary": "会議の概要（2文）",
+  "decisions": ["決定事項1","決定事項2"],
+  "actions": [{"task":"タスク内容","owner":"担当者","deadline":"期限"}],
+  "discussion_points": ["議論のポイント1","ポイント2"],
+  "next_meeting": "次回予定（あれば）"
+}`);
+
+      const allText = `【議事録】${document.getElementById('mtgName').value}\n\n概要：${parsed.summary}\n\n【決定事項】\n${parsed.decisions.join('\n')}\n\n【アクションアイテム】\n${parsed.actions.map(a=>`${a.task} ／ 担当：${a.owner} ／ 期限：${a.deadline}`).join('\n')}\n\n【議論ポイント】\n${parsed.discussion_points.join('\n')}\n\n次回：${parsed.next_meeting||'未定'}`;
+
+      document.getElementById('minutesOutput').innerHTML = `
+        <div class="out-card">
+          <div class="out-card-header">
+            <div class="out-card-title">📝 ${document.getElementById('mtgName').value || '議事録'}</div>
+            <button class="copy-btn" onclick="copyText(\`${allText.replace(/`/g,'\\`')}\`,this)">全文コピー</button>
+          </div>
+          <div class="out-sections">
+            <div class="minutes-item"><div class="mi-label">概要</div><div class="mi-body">${parsed.summary}</div></div>
+            <div class="minutes-item">
+              <div class="mi-label">✅ 決定事項</div>
+              <div class="mi-body">${parsed.decisions.map((d,i)=>`${i+1}. ${d}`).join('\n')}</div>
+            </div>
+            <div class="minutes-item">
+              <div class="mi-label">🎯 アクションアイテム</div>
+              ${parsed.actions.map(a=>`<div style="padding:7px 0;border-bottom:1px dashed var(--border);font-size:13px"><span style="font-weight:700">${a.task}</span><br><span style="font-size:11px;color:var(--ink3)">担当：${a.owner}　期限：${a.deadline}</span></div>`).join('')}
+            </div>
+            <div class="minutes-item"><div class="mi-label">💬 議論ポイント</div><div class="mi-body">${parsed.discussion_points.map(p=>`• ${p}`).join('\n')}</div></div>
+            <div class="minutes-item"><div class="mi-label">📅 次回</div><div class="mi-body">${parsed.next_meeting||'未定'}</div></div>
+          </div>
+        </div>`;
+    } catch(e) { showError('minutesOutput', e.message); }
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+
+  // ── ロードマップ ──
+  async function generateRoadmap() {
+    const goal = document.getElementById('rmGoal').value.trim();
+    if (!goal) { alert('目指す状態を入力してください'); return; }
+    const btn = document.getElementById('rmBtn');
+    btn.disabled = true; btn.classList.add('loading');
+    showSkeleton('roadmapOutput');
+
+    try {
+      const parsed = await callClaude(`あなたはDX・生成AI推進コンサルタント「いいおっち」のロードマップ設計AIです。
+
+クライアント：${document.getElementById('rmClient').value || '未記入'}
+目指す状態：${goal}
+現状・課題：${document.getElementById('rmCurrent').value || '未記入'}
+優先施策：${document.getElementById('rmActions').value || '未記入'}
+期間：${document.getElementById('rmPeriod').value}
+
+フェーズ別ロードマップをJSONで返してください：
+{
+  "title": "ロードマップ名",
+  "vision": "最終ゴール（1文）",
+  "phases": [
+    {
+      "phase": "フェーズ名（例：Phase1 基盤構築）",
+      "period": "期間（例：1〜3ヶ月目）",
+      "theme": "このフェーズのテーマ",
+      "actions": ["施策1","施策2","施策3"],
+      "milestone": "マイルストーン（達成の目安）"
+    }
+  ],
+  "success_metrics": ["成功指標1","指標2","指標3"],
+  "risks": ["リスク・注意点1","注意点2"]
+}`);
+
+      const colors = ['var(--blue)','var(--green)','var(--amber)','var(--teal)'];
+      const allText = `# ${parsed.title}\nビジョン：${parsed.vision}\n\n` +
+        parsed.phases.map(p=>`【${p.phase}】${p.period}\nテーマ：${p.theme}\n施策：${p.actions.join('、')}\nマイルストーン：${p.milestone}`).join('\n\n') +
+        `\n\n【成功指標】\n${parsed.success_metrics.join('\n')}\n\n【リスク】\n${parsed.risks.join('\n')}`;
+
+      document.getElementById('roadmapOutput').innerHTML = `
+        <div class="out-card">
+          <div class="out-card-header">
+            <div class="out-card-title">🗺️ ${parsed.title}</div>
+            <button class="copy-btn" onclick="copyText(\`${allText.replace(/`/g,'\\`')}\`,this)">全文コピー</button>
+          </div>
+          <div class="out-sections">
+            <div class="out-sec"><div class="out-sec-label">ビジョン</div><div class="out-sec-body">${parsed.vision}</div></div>
+            ${parsed.phases.map((p,i)=>`
+              <div class="out-sec" style="border-left-color:${colors[i%colors.length]}">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+                  <div style="font-weight:700;font-size:14px">${p.phase}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3)">${p.period}</div>
+                </div>
+                <div style="font-size:12px;color:var(--ink2);margin-bottom:8px">テーマ：${p.theme}</div>
+                <div style="font-size:12px;color:var(--ink);margin-bottom:8px">${p.actions.map(a=>`▸ ${a}`).join('<br>')}</div>
+                <div style="font-size:12px;background:var(--bg);padding:6px 10px;border-radius:6px;color:${colors[i%colors.length]}">✓ ${p.milestone}</div>
+              </div>`).join('')}
+            <div class="out-sec" style="border-left-color:var(--green)">
+              <div class="out-sec-label">成功指標</div>
+              <div class="out-sec-body">${parsed.success_metrics.map(m=>`📊 ${m}`).join('\n')}</div>
+            </div>
+            <div class="out-sec" style="border-left-color:var(--amber)">
+              <div class="out-sec-label">リスク・注意点</div>
+              <div class="out-sec-body">${parsed.risks.map(r=>`⚠️ ${r}`).join('\n')}</div>
+            </div>
+          </div>
+        </div>`;
+    } catch(e) { showError('roadmapOutput', e.message); }
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ コピー済';
+      setTimeout(() => btn.textContent = '全文コピー', 2000);
+    });
+  }
+</script>
+</body>
+</html>

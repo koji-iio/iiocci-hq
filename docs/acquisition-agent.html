@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>集客エージェント — IIOCCI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #f9f7ff;
+    --s1: #ffffff;
+    --s2: #f3f0ff;
+    --border: #e5e0f5;
+    --border2: #d0c8f0;
+    --ink: #1a1628;
+    --ink2: #4a4268;
+    --ink3: #9a90b8;
+    --purple: #7c3aed;
+    --purple-dim: rgba(124,58,237,0.1);
+    --purple-light: #a78bfa;
+    --pink: #ec4899;
+    --pink-dim: rgba(236,72,153,0.1);
+    --teal: #0891b2;
+    --teal-dim: rgba(8,145,178,0.1);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font-family:'Noto Sans JP',sans-serif; min-height:100vh; }
+
+  /* ── NAV ── */
+  .nav {
+    background:var(--s1);
+    border-bottom:1px solid var(--border);
+    padding:0 28px;
+    display:flex; align-items:center; gap:0;
+    position:sticky; top:0; z-index:100;
+  }
+  .nav-brand { display:flex; align-items:center; gap:10px; padding:14px 0; margin-right:28px; }
+  .nav-icon { width:30px;height:30px; background:var(--purple); border-radius:8px; display:flex;align-items:center;justify-content:center; font-size:15px; }
+  .nav-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; color:var(--ink); }
+  .nav-tabs { display:flex; }
+  .tab { padding:15px 16px; font-size:13px; font-weight:500; color:var(--ink3); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
+  .tab:hover { color:var(--ink); }
+  .tab.active { color:var(--purple); border-bottom-color:var(--purple); font-weight:700; }
+  .nav-back { margin-left:auto; font-size:12px; color:var(--ink3); cursor:pointer; text-decoration:none; padding:6px 12px; border:1px solid var(--border2); border-radius:7px; transition:all .15s; }
+  .nav-back:hover { color:var(--purple); border-color:var(--purple); }
+
+  /* ── LAYOUT ── */
+  .main { max-width:1100px; margin:0 auto; padding:28px; }
+  .two-col { display:grid; grid-template-columns:340px 1fr; gap:20px; }
+  @media(max-width:900px){ .two-col { grid-template-columns:1fr; } }
+
+  /* ── PANEL ── */
+  .panel { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:22px; }
+
+  .panel-label {
+    font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--ink3);
+    text-transform:uppercase; margin-bottom:16px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* ── FORM ── */
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:12px; font-weight:500; color:var(--ink2); margin-bottom:5px; }
+  .field input,.field select,.field textarea {
+    width:100%; padding:9px 12px; border:1px solid var(--border2); border-radius:8px;
+    font-size:13px; font-family:'Noto Sans JP',sans-serif; outline:none;
+    background:var(--bg); color:var(--ink); transition:border-color .15s; resize:vertical;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus { border-color:var(--purple); box-shadow:0 0 0 2px var(--purple-dim); }
+  .field textarea { min-height:70px; }
+  select option { background:var(--s1); }
+
+  .tone-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { padding:5px 12px; border-radius:20px; border:1px solid var(--border2); background:transparent; color:var(--ink2); font-size:12px; cursor:pointer; transition:all .15s; font-family:'Noto Sans JP',sans-serif; }
+  .chip:hover { border-color:var(--purple); color:var(--purple); }
+  .chip.selected { background:var(--purple-dim); border-color:var(--purple); color:var(--purple); }
+
+  .gen-btn {
+    width:100%; padding:13px; background:var(--purple); border:none; border-radius:10px;
+    color:#fff; font-family:'Syne',sans-serif; font-size:15px; font-weight:800;
+    cursor:pointer; transition:all .2s; margin-top:6px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .gen-btn:hover { background:#6d28d9; transform:translateY(-1px); }
+  .gen-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .spinner { width:15px;height:15px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none; }
+  .gen-btn.loading .spinner { display:block; }
+  .gen-btn.loading .btn-txt { display:none; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ── OUTPUT ── */
+  .output-area { min-height:400px; }
+
+  .placeholder-state { height:400px; display:flex;flex-direction:column;align-items:center;justify-content:center; gap:12px; color:var(--ink3); text-align:center; }
+  .placeholder-state .p-icon { font-size:40px; opacity:.4; }
+  .placeholder-state p { font-size:13px; line-height:1.6; max-width:260px; }
+
+  /* X posts */
+  .posts-grid { display:flex; flex-direction:column; gap:12px; }
+
+  .post-card {
+    background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:18px;
+    animation:fadeUp .4s ease both;
+    position:relative; overflow:hidden;
+  }
+  .post-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--purple); opacity:.5; }
+
+  .post-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .post-num { font-family:'DM Mono',monospace; font-size:11px; color:var(--purple); background:var(--purple-dim); padding:2px 8px; border-radius:20px; }
+  .post-actions { display:flex; gap:6px; }
+  .post-btn { padding:4px 10px; border:1px solid var(--border2); border-radius:6px; background:transparent; color:var(--ink3); font-size:11px; cursor:pointer; transition:all .15s; font-family:'Noto Sans JP',sans-serif; }
+  .post-btn:hover { border-color:var(--purple); color:var(--purple); }
+  .post-btn.copied { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+
+  .post-body { font-size:14px; line-height:1.8; color:var(--ink); white-space:pre-wrap; }
+  .post-char { margin-top:8px; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink3); text-align:right; }
+  .char-over { color:#ef4444; }
+
+  /* Note article */
+  .note-card {
+    background:var(--s1); border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    animation:fadeUp .4s ease both;
+  }
+  .note-header { padding:18px 20px; border-bottom:1px solid var(--border); background:var(--s2); display:flex;align-items:center;justify-content:space-between; }
+  .note-tag { font-family:'DM Mono',monospace; font-size:10px; color:var(--pink); background:var(--pink-dim); padding:3px 9px; border-radius:20px; border:1px solid rgba(236,72,153,.2); }
+  .note-copy-btn { padding:5px 12px; border:1px solid var(--border2); border-radius:7px; background:transparent; color:var(--ink3); font-size:12px; cursor:pointer; transition:all .15s; font-family:'Noto Sans JP',sans-serif; }
+  .note-copy-btn:hover { border-color:var(--pink); color:var(--pink); }
+
+  .note-sections { padding:20px; display:flex; flex-direction:column; gap:16px; }
+  .note-section { }
+  .note-section-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--ink3); text-transform:uppercase; margin-bottom:6px; }
+  .note-section-body { font-size:13px; line-height:1.8; color:var(--ink); white-space:pre-wrap; }
+
+  /* Skeleton */
+  .skeleton { background:linear-gradient(90deg,var(--s2) 25%,var(--border) 50%,var(--s2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:6px; height:14px; margin-bottom:8px; }
+  .skeleton.wide{width:100%} .skeleton.med{width:70%} .skeleton.short{width:40%}
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* tab pages */
+  .page { display:none; }
+  .page.active { display:block; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand">
+    <div class="nav-icon">📣</div>
+    <div class="nav-title">集客エージェント</div>
+  </div>
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab('x', this)">𝕏 投稿生成</div>
+    <div class="tab" onclick="switchTab('note', this)">note 記事構成</div>
+  </div>
+  <a class="nav-back" href="index.html">← HQに戻る</a>
+</div>
+
+<div class="main">
+
+  <!-- X投稿タブ -->
+  <div class="page active" id="page-x">
+    <div class="two-col">
+      <!-- Input -->
+      <div>
+        <div class="panel">
+          <div class="panel-label">投稿設定</div>
+
+          <div class="field">
+            <label>今週の発信テーマ</label>
+            <input type="text" id="xTheme" placeholder="例：生成AI導入でよくある失敗3選">
+          </div>
+
+          <div class="field">
+            <label>ターゲット読者</label>
+            <select id="xTarget">
+              <option>DXを任されたが何から始めるか迷っている中間管理職</option>
+              <option>社内でAI活用が進まず困っている担当者</option>
+              <option>経営者・事業オーナー（中小企業）</option>
+              <option>データ活用したいがツール選定で止まっている企業担当</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>投稿本数</label>
+            <select id="xCount">
+              <option value="3">3本</option>
+              <option value="5" selected>5本</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>トーン</label>
+            <div class="tone-chips">
+              <div class="chip selected" onclick="toggleChip(this)">実体験ベース</div>
+              <div class="chip" onclick="toggleChip(this)">ノウハウ系</div>
+              <div class="chip" onclick="toggleChip(this)">問いかけ型</div>
+              <div class="chip" onclick="toggleChip(this)">失敗談・反省</div>
+              <div class="chip" onclick="toggleChip(this)">データ・数字引用</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>補足・実体験メモ（任意）</label>
+            <textarea id="xMemo" placeholder="例：Copilot展開でステークホルダー巻き込みに苦労した話"></textarea>
+          </div>
+
+          <button class="gen-btn" id="xBtn" onclick="generateX()">
+            <div class="spinner"></div>
+            <span class="btn-txt">✦ 投稿案を生成する</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="output-area" id="xOutput">
+        <div class="placeholder-state">
+          <div class="p-icon">✦</div>
+          <p>テーマを入力して生成ボタンを押すと、X投稿案が複数生成されます</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- note記事タブ -->
+  <div class="page" id="page-note">
+    <div class="two-col">
+      <!-- Input -->
+      <div>
+        <div class="panel">
+          <div class="panel-label">記事設定</div>
+
+          <div class="field">
+            <label>記事タイトル（案）</label>
+            <input type="text" id="noteTitle" placeholder="例：生成AI導入で現場が動いた理由">
+          </div>
+
+          <div class="field">
+            <label>記事の種類</label>
+            <select id="noteType">
+              <option>自己紹介・プロフィール記事</option>
+              <option>実体験・ケーススタディ</option>
+              <option>ノウハウ・解説記事</option>
+              <option>失敗談・反省記事</option>
+              <option>業界考察・オピニオン</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>伝えたいメッセージ・核心</label>
+            <textarea id="noteCore" placeholder="例：技術より人の巻き込みが9割。ロードマップより先に関係者の納得感が必要。"></textarea>
+          </div>
+
+          <div class="field">
+            <label>盛り込みたいエピソード（任意）</label>
+            <textarea id="noteEp" placeholder="例：Copilot展開で最初に抵抗したのは一番忙しい現場リーダーだった"></textarea>
+          </div>
+
+          <button class="gen-btn" id="noteBtn" onclick="generateNote()">
+            <div class="spinner"></div>
+            <span class="btn-txt">✦ 記事構成を生成する</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="output-area" id="noteOutput">
+        <div class="placeholder-state">
+          <div class="p-icon">✦</div>
+          <p>設定を入力して生成ボタンを押すと、note記事の構成と各セクションの草案が生成されます</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchTab(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  function toggleChip(el) { el.classList.toggle('selected'); }
+
+  function getChips() {
+    return [...document.querySelectorAll('#page-x .chip.selected')].map(c => c.textContent).join('・');
+  }
+
+  // ── X投稿生成 ──
+  async function generateX() {
+    const theme = document.getElementById('xTheme').value.trim();
+    if (!theme) { alert('発信テーマを入力してください'); return; }
+
+    const btn = document.getElementById('xBtn');
+    btn.disabled = true; btn.classList.add('loading');
+
+    const out = document.getElementById('xOutput');
+    out.innerHTML = `<div class="panel"><div class="skeleton wide"></div><div class="skeleton med"></div><div class="skeleton wide"></div><div class="skeleton short"></div></div>`;
+
+    const target = document.getElementById('xTarget').value;
+    const count = document.getElementById('xCount').value;
+    const tones = getChips() || '実体験ベース';
+    const memo = document.getElementById('xMemo').value.trim();
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: `あなたはDX・生成AI活用推進コンサルタント「いいおっち（飯尾航史）」のSNS担当AIです。
+プロフィール：トヨタ自動車九州でDX推進・Copilot全社展開・Tableau導入などを担当。グロービスMBA。現在副業コンサルをスタート。
+
+以下の条件でX（Twitter）投稿案を${count}本生成してください。
+
+テーマ：${theme}
+ターゲット：${target}
+トーン：${tones}
+補足：${memo || 'なし'}
+
+ルール：
+- 1投稿140字以内（日本語）
+- ハッシュタグは1〜2個まで
+- 実体験・具体性を重視
+- 共感・保存・RTされやすい構成
+- 売り込みゼロ、価値提供ベース
+
+JSONのみ返すこと（説明文・マークダウン不要）：
+{"posts":[{"text":"投稿本文","hashtags":"#タグ1 #タグ2"}]}`
+          }]
+        })
+      });
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || '';
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+
+      out.innerHTML = '<div class="posts-grid"></div>';
+      const grid = out.querySelector('.posts-grid');
+
+      parsed.posts.forEach((p, i) => {
+        const full = p.text + (p.hashtags ? '\n' + p.hashtags : '');
+        const charCount = full.length;
+        const isOver = charCount > 140;
+        const card = document.createElement('div');
+        card.className = 'post-card';
+        card.style.animationDelay = `${i * 0.08}s`;
+        card.innerHTML = `
+          <div class="post-header">
+            <div class="post-num">POST ${String(i+1).padStart(2,'0')}</div>
+            <div class="post-actions">
+              <button class="post-btn" onclick="copyPost(this, \`${full.replace(/`/g,'\\`')}\`)">コピー</button>
+            </div>
+          </div>
+          <div class="post-body">${full}</div>
+          <div class="post-char ${isOver?'char-over':''}">${charCount}/140字</div>
+        `;
+        grid.appendChild(card);
+      });
+
+    } catch(e) {
+      out.innerHTML = `<div class="panel" style="color:#ef4444;font-size:13px">エラーが発生しました: ${e.message}</div>`;
+    }
+
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+
+  function copyPost(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ コピー済';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // ── note記事構成生成 ──
+  async function generateNote() {
+    const title = document.getElementById('noteTitle').value.trim();
+    const core = document.getElementById('noteCore').value.trim();
+    if (!title || !core) { alert('タイトルと核心メッセージを入力してください'); return; }
+
+    const btn = document.getElementById('noteBtn');
+    btn.disabled = true; btn.classList.add('loading');
+
+    const out = document.getElementById('noteOutput');
+    out.innerHTML = `<div class="panel"><div class="skeleton wide"></div><div class="skeleton med"></div><div class="skeleton wide"></div><div class="skeleton short"></div></div>`;
+
+    const type = document.getElementById('noteType').value;
+    const ep = document.getElementById('noteEp').value.trim();
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: `あなたはDX・生成AI活用推進コンサルタント「いいおっち」のnote記事構成担当AIです。
+
+以下の条件でnote記事の構成と各セクションの草案を生成してください。
+
+タイトル案：${title}
+記事種類：${type}
+核心メッセージ：${core}
+エピソード：${ep || 'なし'}
+
+以下のJSON形式のみで返してください（説明文・マークダウン不要）：
+{
+  "title": "最終タイトル（キャッチーに改善）",
+  "lead": "導入文（2〜3文）",
+  "sections": [
+    {"heading": "見出し", "body": "本文の草案（3〜5文）"}
+  ],
+  "closing": "まとめ・CTA（2〜3文）",
+  "tags": ["タグ1","タグ2","タグ3"]
+}`
+          }]
+        })
+      });
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || '';
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+
+      const allText = `# ${parsed.title}\n\n${parsed.lead}\n\n` +
+        parsed.sections.map(s => `## ${s.heading}\n${s.body}`).join('\n\n') +
+        `\n\n${parsed.closing}\n\nタグ：${parsed.tags?.join(' ')}`;
+
+      out.innerHTML = `
+        <div class="note-card">
+          <div class="note-header">
+            <div style="font-size:15px;font-weight:700;color:var(--ink)">${parsed.title}</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="note-tag">note</div>
+              <button class="note-copy-btn" onclick="copyNote(\`${allText.replace(/`/g,'\\`')}\`, this)">全文コピー</button>
+            </div>
+          </div>
+          <div class="note-sections">
+            <div class="note-section">
+              <div class="note-section-label">導入文</div>
+              <div class="note-section-body">${parsed.lead}</div>
+            </div>
+            ${parsed.sections.map((s,i) => `
+              <div class="note-section" style="animation-delay:${i*0.06}s">
+                <div class="note-section-label">## ${s.heading}</div>
+                <div class="note-section-body">${s.body}</div>
+              </div>`).join('')}
+            <div class="note-section">
+              <div class="note-section-label">まとめ・CTA</div>
+              <div class="note-section-body">${parsed.closing}</div>
+            </div>
+            <div class="note-section">
+              <div class="note-section-label">推奨タグ</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+                ${(parsed.tags||[]).map(t=>`<span style="padding:3px 10px;background:var(--pink-dim);color:var(--pink);border-radius:20px;font-size:12px">#${t}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+    } catch(e) {
+      out.innerHTML = `<div class="panel" style="color:#ef4444;font-size:13px">エラーが発生しました: ${e.message}</div>`;
+    }
+
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+
+  function copyNote(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ コピー済';
+      setTimeout(() => btn.textContent = '全文コピー', 2000);
+    });
+  }
+</script>
+</body>
+</html>

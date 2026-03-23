@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設定 — IIOCCI HQ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+  :root {
+    --bg:#0d0f0e; --s1:#141715; --s2:#1a1d1b; --border:#242725; --border2:#2e3330;
+    --accent:#4ade80; --accent-dim:rgba(74,222,128,0.12);
+    --text:#e8ede9; --text2:#8fa890; --text3:#5a6b5c;
+    --red:#f87171; --yellow:#fbbf24;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans JP',sans-serif; min-height:100vh; padding:40px 24px 80px; }
+  .wrap { max-width:680px; margin:0 auto; }
+
+  .back { font-size:13px; color:var(--text3); text-decoration:none; display:inline-flex; align-items:center; gap:6px; margin-bottom:32px; transition:color .15s; }
+  .back:hover { color:var(--accent); }
+
+  h1 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:#fff; margin-bottom:6px; }
+  .sub { font-size:13px; color:var(--text2); margin-bottom:40px; line-height:1.6; }
+
+  .card { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:24px 28px; margin-bottom:20px; }
+  .card-title { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .card-desc { font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:16px; }
+
+  .step { display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }
+  .step-num { width:24px; height:24px; background:var(--accent-dim); border:1px solid rgba(74,222,128,.25); border-radius:6px; display:flex;align-items:center;justify-content:center; font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); flex-shrink:0; margin-top:1px; }
+  .step-body { font-size:13px; color:var(--text2); line-height:1.7; }
+  .step-body b { color:var(--text); }
+  .step-body code { background:var(--s2); border:1px solid var(--border2); padding:1px 6px; border-radius:4px; font-family:'DM Mono',monospace; font-size:12px; color:var(--accent); }
+
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; font-weight:500; color:var(--text2); margin-bottom:6px; }
+  .field input { width:100%; background:var(--s2); border:1px solid var(--border2); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:12px; padding:10px 14px; outline:none; transition:border-color .15s; }
+  .field input:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim); }
+  .field input::placeholder { color:var(--text3); }
+
+  .save-btn { width:100%; padding:13px; background:var(--accent); border:none; border-radius:10px; color:#0d0f0e; font-family:'Syne',sans-serif; font-size:15px; font-weight:800; cursor:pointer; transition:all .2s; }
+  .save-btn:hover { opacity:.85; transform:translateY(-1px); }
+
+  .status { padding:12px 16px; border-radius:10px; font-size:13px; margin-top:12px; display:none; }
+  .status.ok { background:var(--accent-dim); border:1px solid rgba(74,222,128,.25); color:var(--accent); }
+  .status.err { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25); color:var(--red); }
+
+  .test-btn { width:100%; padding:10px; background:transparent; border:1px solid var(--border2); border-radius:8px; color:var(--text2); font-size:13px; cursor:pointer; margin-top:8px; transition:all .15s; font-family:'Noto Sans JP',sans-serif; }
+  .test-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  .gas-code { background:var(--s2); border:1px solid var(--border2); border-radius:10px; padding:16px; overflow-x:auto; }
+  .gas-code pre { font-family:'DM Mono',monospace; font-size:11px; color:var(--text2); line-height:1.7; white-space:pre-wrap; word-break:break-all; }
+
+  .copy-code-btn { margin-top:10px; padding:6px 14px; background:transparent; border:1px solid var(--border2); border-radius:6px; color:var(--text3); font-size:11px; cursor:pointer; transition:all .15s; font-family:'Noto Sans JP',sans-serif; }
+  .copy-code-btn:hover { border-color:var(--accent); color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← HQに戻る</a>
+
+  <h1>⚙️ 初期設定</h1>
+  <p class="sub">Google Apps ScriptのURLを登録することで、スマホ・PCどちらからでもデータが同期されます。<br>一度設定すれば次回から不要です。</p>
+
+  <!-- Step 1: GAS設定 -->
+  <div class="card">
+    <div class="card-title">Step 1 — Google Apps Scriptをセットアップ</div>
+    <div class="card-desc">Googleスプレッドシートをデータベースとして使うためのAPIを作成します。</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body"><b>Google スプレッドシートを新規作成</b>（タイトルは「IIOCCI HQ データ」など）</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">メニューから <b>拡張機能 → Apps Script</b> を開く</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">エディタに以下のコードを<b>全て貼り付けて保存</b>（Ctrl+S）</div>
+    </div>
+
+    <div class="gas-code">
+      <pre id="gasCode">// GASコードを読み込み中...</pre>
+    </div>
+    <button class="copy-code-btn" onclick="copyGasCode()">📋 コードをコピー</button>
+
+    <div class="step" style="margin-top:16px">
+      <div class="step-num">4</div>
+      <div class="step-body"><b>デプロイ → 新しいデプロイ</b> → 種類：「ウェブアプリ」→ アクセス：<code>全員</code> → デプロイ</div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">表示された <b>ウェブアプリのURL</b> をコピーして下に貼り付ける</div>
+    </div>
+  </div>
+
+  <!-- Step 2: URL登録 -->
+  <div class="card">
+    <div class="card-title">Step 2 — GAS URLを登録</div>
+    <div class="field">
+      <label>Google Apps Script ウェブアプリURL</label>
+      <input type="url" id="gasUrl" placeholder="https://script.google.com/macros/s/...../exec">
+    </div>
+    <button class="save-btn" onclick="saveUrl()">保存してテスト接続する</button>
+    <button class="test-btn" onclick="testConnection()">🔌 接続テストのみ実行</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- Step 3: GitHub Pages -->
+  <div class="card">
+    <div class="card-title">Step 3 — GitHub Pagesにデプロイ（任意）</div>
+    <div class="card-desc">URLでどこからでもアクセスできるようにする手順です。</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">GitHubで新しいリポジトリを作成（例：<code>iiocci-hq</code>）、<b>Public</b>に設定</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">このフォルダ内の全HTMLファイルをリポジトリにアップロード（GitHub Desktopが簡単）</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">Settings → Pages → Source: <code>main branch / docs folder</code> → Save</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body"><code>https://[ユーザー名].github.io/iiocci-hq/</code> にアクセスできるようになる</div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">このURLをスマホのホーム画面に追加すれば完成 🎉</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // GASコードを表示
+  const GAS_CODE = `/**
+ * IIOCCI HQ — Google Apps Script API
+ */
+function doGet(e)  { return handleRequest(e); }
+function doPost(e) { return handleRequest(e); }
+
+function handleRequest(e) {
+  const postData = e.postData ? JSON.parse(e.postData.contents) : {};
+  const params = e.parameter;
+  const action = params.action || postData.action;
+  const sheet  = params.sheet  || postData.sheet;
+  let result;
+  try {
+    switch(action) {
+      case 'read':   result = readSheet(sheet); break;
+      case 'write':  result = writeSheet(sheet, postData.data); break;
+      case 'append': result = appendRow(sheet, postData.row); break;
+      case 'delete': result = deleteRow(sheet, postData.id); break;
+      default:       result = { error: 'unknown action' };
+    }
+  } catch(err) { result = { error: err.message }; }
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getSheet(name) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let s = ss.getSheetByName(name);
+  if (!s) {
+    s = ss.insertSheet(name);
+    if (name==='cases')    s.appendRow(['id','date','client','service','status','amount','memo']);
+    if (name==='revenues') s.appendRow(['id','date','client','desc','amount','memo']);
+    if (name==='phase1') {
+      s.appendRow(['index','checked']);
+      for(let i=0;i<17;i++) s.appendRow([i,'false']);
+    }
+  }
+  return s;
+}
+
+function readSheet(name) {
+  const s = getSheet(name);
+  const d = s.getDataRange().getValues();
+  if (name==='phase1') {
+    return { checked: d.slice(1).map(r=>r[1]==='true'||r[1]===true) };
+  }
+  if (d.length<=1) return { rows:[] };
+  const h = d[0];
+  return { rows: d.slice(1).map(r=>{ const o={}; h.forEach((k,i)=>o[k]=r[i]); return o; }) };
+}
+
+function writeSheet(name, data) {
+  const s = getSheet(name);
+  if (name==='phase1') {
+    const ex = s.getDataRange().getValues();
+    for(let i=0;i<data.length;i++) {
+      if(ex[i+1]) s.getRange(i+2,2).setValue(String(data[i]));
+      else s.appendRow([i,String(data[i])]);
+    }
+    return { success:true };
+  }
+  return { error:'not supported' };
+}
+
+function appendRow(name, row) {
+  const s = getSheet(name);
+  const id = Date.now();
+  if(name==='cases')    s.appendRow([id,row.date,row.client,row.service,row.status,row.amount||0,row.memo||'']);
+  if(name==='revenues') s.appendRow([id,row.date,row.client,row.desc||'',row.amount||0,row.memo||'']);
+  return { success:true, id };
+}
+
+function deleteRow(name, id) {
+  const s = getSheet(name);
+  const d = s.getDataRange().getValues();
+  for(let i=1;i<d.length;i++) {
+    if(String(d[i][0])===String(id)) { s.deleteRow(i+1); return { success:true }; }
+  }
+  return { error:'not found' };
+}`;
+
+  document.getElementById('gasCode').textContent = GAS_CODE;
+
+  function copyGasCode() {
+    navigator.clipboard.writeText(GAS_CODE).then(() => {
+      const btn = document.querySelector('.copy-code-btn');
+      btn.textContent = '✓ コピーしました';
+      setTimeout(() => btn.textContent = '📋 コードをコピー', 2000);
+    });
+  }
+
+  function saveUrl() {
+    const url = document.getElementById('gasUrl').value.trim();
+    if (!url.startsWith('https://script.google.com')) {
+      showStatus('err', 'GAS URLの形式が正しくありません。https://script.google.com/... で始まるURLを入力してください。');
+      return;
+    }
+    localStorage.setItem('iiocci-gas-url', url);
+    testConnection();
+  }
+
+  async function testConnection() {
+    const url = localStorage.getItem('iiocci-gas-url') || document.getElementById('gasUrl').value.trim();
+    if (!url) { showStatus('err', 'URLが未設定です'); return; }
+    showStatus('ok', '接続テスト中...');
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'read', sheet: 'phase1' }),
+        redirect: 'follow'
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      showStatus('ok', '✅ 接続成功！スプレッドシートと連携できています。HQに戻って使い始めてください。');
+    } catch(e) {
+      showStatus('err', `接続失敗: ${e.message}。GASのデプロイ設定（アクセス権限：全員）を確認してください。`);
+    }
+  }
+
+  function showStatus(type, msg) {
+    const el = document.getElementById('status');
+    el.className = `status ${type}`;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // 既存URL表示
+  const saved = localStorage.getItem('iiocci-gas-url');
+  if (saved) document.getElementById('gasUrl').value = saved;
+</script>
+</body>
+</html>
