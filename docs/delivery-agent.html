@@ -227,7 +227,7 @@
     const _api = createApi();
     if (!_api) throw new Error('GAS URLが未設定です。settings.htmlで接続設定をしてください。');
     const raw = await _api.callClaude([{ role: 'user', content: prompt }]);
-    return JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const match = raw.match(/\{[\s\S]*\}/); if (!match) throw new Error('JSON not found'); return JSON.parse(match[0]);
   }
 
   // ── WSアジェンダ ──

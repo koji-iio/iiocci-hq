@@ -335,7 +335,7 @@
 JSONのみ返すこと（説明文・マークダウン不要）：
 {"posts":[{"text":"投稿本文","hashtags":"#タグ1 #タグ2"}]}`
       });
-      const clean = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+      const clean = (() => { const m = raw.match(/\{[\s\S]*\}/); if(!m) throw new Error('JSON not found'); return m[0]; })();
       const parsed = JSON.parse(clean);
 
       out.innerHTML = '<div class="posts-grid"></div>';
