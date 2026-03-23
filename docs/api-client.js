@@ -36,6 +36,13 @@ class IioApi {
   delete(sheet, id)     { return this._call({ action: 'delete', sheet, id }); }
   write(sheet, data)    { return this._call({ action: 'write', sheet, data }); }
 
+  // Claude API をGAS経由で呼ぶ（CORSを回避）
+  async callClaude(messages, systemPrompt) {
+    const r = await this._call({ action: 'claude', messages, system: systemPrompt });
+    if (r.error) throw new Error(r.error);
+    return r.text;
+  }
+
   async readPhase1() {
     const r = await this.read('phase1');
     return r.checked || new Array(17).fill(false);

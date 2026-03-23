@@ -848,25 +848,19 @@
     const doneCount = cases.filter(c => c.status==='done').length;
     const services = [...new Set(cases.map(c=>c.service))];
 
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: `あなたは個人事業主「いいおっち」の経営アドバイザーです。以下のデータをもとに、2〜3文で簡潔な経営アドバイスをしてください。絵文字を1〜2個使って読みやすくしてください。
+      const _api = createApi();
+      if (!_api) { text.textContent = 'GAS URLが未設定です。settings.htmlで接続設定をしてください。'; btn.disabled = false; btn.textContent = '✦ 再分析する'; return; }
+
+      try {
+        const result = await _api.callClaude([{ role: 'user', content: `あなたは個人事業主「いいおっち」の経営アドバイザーです。以下のデータをもとに、2〜3文で簡潔な経営アドバイスをしてください。絵文字を1〜2個使って読みやすくしてください。
 - 総案件数: ${cases.length}件
 - 進行中: ${activeCount}件
 - 完了: ${doneCount}件
 - 今月売上: ${monthRev}万円
 - 累計売上: ${totalRev}万円
 - 主なサービス: ${services.join('、') || 'まだなし'}
-簡潔に2〜3文で。` }]
-        })
-      });
-      const data = await res.json();
-      text.textContent = data.content?.[0]?.text || 'データを追加すると分析できます。';
+簡潔に2〜3文で。` }]);
+        text.textContent = result || 'データを追加すると分析できます。';
     } catch(e) {
       text.textContent = 'データを入力すると経営状況を分析します。';
     }

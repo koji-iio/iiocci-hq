@@ -224,17 +224,9 @@
   }
 
   async function callClaude(prompt) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || '';
+    const _api = createApi();
+    if (!_api) throw new Error('GAS URLが未設定です。settings.htmlで接続設定をしてください。');
+    const raw = await _api.callClaude([{ role: 'user', content: prompt }]);
     return JSON.parse(raw.replace(/```json|```/g,'').trim());
   }
 

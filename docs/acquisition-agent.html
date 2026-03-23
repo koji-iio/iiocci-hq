@@ -312,13 +312,9 @@
     const memo = document.getElementById('xMemo').value.trim();
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: `あなたはDX・生成AI活用推進コンサルタント「いいおっち（飯尾航史）」のSNS担当AIです。
+      const _api = createApi();
+      if (!_api) throw new Error('GAS URLが未設定です。settings.htmlで接続設定をしてください。');
+      const raw = await _api.callClaude([{ role: 'user', content: `あなたはDX・生成AI活用推進コンサルタント「いいおっち（飯尾航史）」のSNS担当AIです。
 プロフィール：トヨタ自動車九州でDX推進・Copilot全社展開・Tableau導入などを担当。グロービスMBA。現在副業コンサルをスタート。
 
 以下の条件でX（Twitter）投稿案を${count}本生成してください。
@@ -337,11 +333,7 @@
 
 JSONのみ返すこと（説明文・マークダウン不要）：
 {"posts":[{"text":"投稿本文","hashtags":"#タグ1 #タグ2"}]}`
-          }]
-        })
       });
-      const data = await res.json();
-      const raw = data.content?.[0]?.text || '';
       const clean = raw.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
 
@@ -399,13 +391,9 @@ JSONのみ返すこと（説明文・マークダウン不要）：
     const ep = document.getElementById('noteEp').value.trim();
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: `あなたはDX・生成AI活用推進コンサルタント「いいおっち」のnote記事構成担当AIです。
+      const _api2 = createApi();
+      if (!_api2) throw new Error('GAS URLが未設定です。settings.htmlで接続設定をしてください。');
+      const raw = await _api2.callClaude([{ role: 'user', content: `あなたはDX・生成AI活用推進コンサルタント「いいおっち」のnote記事構成担当AIです。
 
 以下の条件でnote記事の構成と各セクションの草案を生成してください。
 
@@ -424,11 +412,7 @@ JSONのみ返すこと（説明文・マークダウン不要）：
   "closing": "まとめ・CTA（2〜3文）",
   "tags": ["タグ1","タグ2","タグ3"]
 }`
-          }]
-        })
-      });
-      const data = await res.json();
-      const raw = data.content?.[0]?.text || '';
+      ]);
       const clean = raw.replace(/```json|```/g,'').trim();
       const parsed = JSON.parse(clean);
 
