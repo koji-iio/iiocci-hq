@@ -398,6 +398,8 @@
 <body>
 <div class="container">
 
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink3);text-decoration:none;margin-bottom:24px;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--ink3)'">← HQに戻る</a>
+
   <!-- Header -->
   <div class="header">
     <div class="header-left">
@@ -710,20 +712,35 @@
     return [...document.querySelectorAll('.task-item')];
   }
 
+  const LS_KEY = 'iiocci-phase1-tasks';
+
   async function loadState() {
+    let checked = new Array(17).fill(false);
     try {
       if (api) {
-        const checked = await api.readPhase1();
-        getAllTasks().forEach((el, i) => { if (checked[i]) el.classList.add('done'); });
+        checked = await api.readPhase1();
+      } else {
+        // GAS未設定時はlocalStorageから読む
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) checked = JSON.parse(saved);
       }
-    } catch(e) { console.log('初回または未設定'); }
+    } catch(e) {
+      // GASエラー時もlocalStorageにフォールバック
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) checked = JSON.parse(saved);
+    }
+    getAllTasks().forEach((el, i) => { if (checked[i]) el.classList.add('done'); });
     updateProgress();
   }
 
   async function saveState() {
-    if (!api) return;
     const state = getAllTasks().map(el => el.classList.contains('done'));
-    try { await api.writePhase1(state); } catch(e) { console.error('保存失敗:', e); }
+    // 常にlocalStorageに保存（即時・確実）
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    // GASがあればクラウドにも保存
+    if (api) {
+      try { await api.writePhase1(state); } catch(e) { console.error('GAS保存失敗:', e); }
+    }
   }
 
   function toggle(el) {
