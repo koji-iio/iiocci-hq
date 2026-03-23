@@ -844,27 +844,32 @@
     btn.textContent = '送信 →';
   }
 
-  // Init（GASへの並行リクエスト競合を避けるため順次実行）
-  // まずlocalStorageで即表示してからGASで更新
-  (() => {
+  // Init：DOMContentLoaded後にlocalStorageで即表示→GASで更新
+  function applyPhaseFromStorage() {
     const saved = localStorage.getItem('iiocci-phase1-tasks');
-    if (saved) {
-      try {
-        const checked = JSON.parse(saved);
-        const done = checked.filter(Boolean).length;
-        const pct = Math.round((done / 17) * 100);
-        document.getElementById('phasePct').textContent = pct + '%';
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('kpi-phase').textContent = pct + '%';
-        ['pi-rule','pi-open','pi-menu','pi-sns','pi-match'].forEach((id, i) => {
-          const el = document.getElementById(id);
-          if (!el) return;
-          if (checked[i]) { el.classList.add('done'); el.querySelector('.pi-check').textContent = '✓'; }
-        });
-      } catch(e) {}
-    }
-  })();
-  loadPhase().then(() => loadStats());
+    if (!saved) return;
+    try {
+      const checked = JSON.parse(saved);
+      const done = checked.filter(Boolean).length;
+      const pct = Math.round((done / 17) * 100);
+      const phasePctEl = document.getElementById('phasePct');
+      const fillEl = document.getElementById('progressFill');
+      const kpiEl = document.getElementById('kpi-phase');
+      if (phasePctEl) phasePctEl.textContent = pct + '%';
+      if (fillEl) fillEl.style.width = pct + '%';
+      if (kpiEl) kpiEl.textContent = pct + '%';
+      ['pi-rule','pi-open','pi-menu','pi-sns','pi-match'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const chk = el.querySelector('.pi-check');
+        if (checked[i]) { el.classList.add('done'); if (chk) chk.textContent = '✓'; }
+        else { el.classList.remove('done'); if (chk) chk.textContent = '○'; }
+      });
+    } catch(e) {}
+  }
+
+  applyPhaseFromStorage(); // 即時実行
+  loadPhase().then(() => loadStats()); // GASで更新
 </script>
 </body>
 </html>
