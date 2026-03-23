@@ -395,6 +395,7 @@
 </style>
 </head>
 <body>
+<a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#888;text-decoration:none;padding:8px 16px;position:fixed;top:12px;left:12px;z-index:9999;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:20px;backdrop-filter:blur(8px);transition:all .2s;" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.color='#888';this.style.borderColor='rgba(255,255,255,0.1)'">← HQに戻る</a>
 
 <!-- Top bar -->
 <div class="topbar">
@@ -480,11 +481,21 @@
       <div class="output-title">提案書ドラフト</div>
       <div class="output-actions">
         <button class="action-btn" onclick="copyAll()">📋 全文コピー</button>
+        <button class="action-btn" id="slideBtn" onclick="generateSlides()" style="display:none;">🖥 スライド生成</button>
         <button class="action-btn primary" onclick="regenerate()">↺ 再生成</button>
       </div>
     </div>
     <div class="proposal-content" id="proposalContent"></div>
     <div class="error-msg" id="errorMsg" style="display:none;"></div>
+
+    <!-- スライドプレビューエリア -->
+    <div id="slideArea" style="display:none;margin-top:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:600;color:#e2e8f0;">🖥 提案スライド</div>
+        <button id="downloadBtn" class="action-btn primary" onclick="downloadSlides()">⬇ PPTXダウンロード</button>
+      </div>
+      <div id="slidePreview" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
   </div>
 </div>
 
@@ -607,6 +618,11 @@ JSONのみを返し、説明文やマークダウン記法は一切含めない�
         content.appendChild(div);
       });
 
+      // スライド生成ボタンを表示
+      document.getElementById('slideBtn').style.display = 'inline-flex';
+      document.getElementById('slideArea').style.display = 'none';
+      _slideData = null;
+
     } catch (err) {
       content.innerHTML = '';
       const errEl = document.getElementById('errorMsg');
@@ -632,6 +648,213 @@ JSONのみを返し、説明文やマークダウン記法は一切含めない�
       const btn = document.querySelector('.action-btn');
       btn.textContent = '✓ コピーしました';
       setTimeout(() => btn.textContent = '📋 全文コピー', 2000);
+    });
+  }
+
+  // ── スライド生成 ────────────────────────────────
+  let _slideData = null;
+
+  async function generateSlides() {
+    const sections = document.querySelectorAll('.proposal-section');
+    if (!sections.length) return;
+
+    const btn = document.getElementById('slideBtn');
+    btn.textContent = '⏳ 生成中...';
+    btn.disabled = true;
+
+    // セクションデータを収集
+    const sectionsData = [...sections].map(s => ({
+      title: s.querySelector('.section-title')?.textContent || '',
+      content: s.querySelector('.section-body')?.textContent || ''
+    }));
+
+    const client = document.getElementById('client').value.trim();
+
+    // GAS経由でスライド構成データをClaudeに作ってもらう
+    try {
+      const api = createApi();
+      if (!api) throw new Error('GAS URLが未設定です');
+
+      const prompt = `以下の提案書セクションをもとに、PowerPointスライド用のデータをJSON形式で作成してください。
+クライアント：${client}
+
+セクション一覧：
+${sectionsData.map((s,i) => `${i+1}. ${s.title}：${s.content.substring(0,200)}`).join('\n')}
+
+以下のJSON形式のみで返してください：
+{
+  "title": "提案書タイトル（クライアント名を含む）",
+  "subtitle": "〜DX推進コンサルティング提案〜",
+  "presenter": "飯尾航史",
+  "date": "${new Date().getFullYear()}年${new Date().getMonth()+1}月",
+  "slides": [
+    {
+      "type": "section",
+      "title": "スライドタイトル",
+      "bullets": ["箇条書き1（30字以内）", "箇条書き2", "箇条書き3"],
+      "highlight": "強調したい数字や一言（任意）"
+    }
+  ]
+}
+slides は表紙を除く7枚。各スライドのbulletsは3〜4項目、各30字以内で簡潔に。`;
+
+      const raw = await api.callClaude([{role:'user', content: prompt}]);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('JSONが見つかりません');
+      _slideData = JSON.parse(match[0]);
+
+    } catch(e) {
+      // GASが失敗した場合はセクションデータから直接スライドを生成
+      _slideData = {
+        title: `${client} 様　ご提案`,
+        subtitle: '〜DX推進コンサルティング提案〜',
+        presenter: '飯尾航史',
+        date: `${new Date().getFullYear()}年${new Date().getMonth()+1}月`,
+        slides: sectionsData.map(s => ({
+          type: 'section',
+          title: s.title,
+          bullets: s.content.split('。').filter(t => t.trim().length > 5).slice(0, 4).map(t => t.trim().substring(0, 40)),
+          highlight: ''
+        }))
+      };
+    }
+
+    // プレビュー描画
+    renderSlidePreview(_slideData);
+
+    btn.textContent = '🖥 スライド再生成';
+    btn.disabled = false;
+  }
+
+  function renderSlidePreview(data) {
+    const preview = document.getElementById('slidePreview');
+    preview.innerHTML = '';
+    document.getElementById('slideArea').style.display = 'block';
+
+    // 表紙スライド
+    const coverEl = document.createElement('div');
+    coverEl.style.cssText = 'background:linear-gradient(135deg,#1a237e,#0d47a1);border-radius:8px;padding:40px;color:#fff;min-height:160px;display:flex;flex-direction:column;justify-content:center;';
+    coverEl.innerHTML = `
+      <div style="font-size:11px;opacity:.7;margin-bottom:8px;letter-spacing:2px;">PROPOSAL</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:8px;">${data.title}</div>
+      <div style="font-size:14px;opacity:.85;margin-bottom:16px;">${data.subtitle}</div>
+      <div style="font-size:12px;opacity:.7;">${data.presenter}　／　${data.date}</div>
+    `;
+    preview.appendChild(coverEl);
+
+    // 各セクションスライド
+    data.slides.forEach((slide, i) => {
+      const el = document.createElement('div');
+      el.style.cssText = 'background:#1e293b;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:28px 32px;display:grid;grid-template-columns:3px 1fr;gap:0 20px;';
+      el.innerHTML = `
+        <div style="background:linear-gradient(to bottom,#3b82f6,#1d4ed8);border-radius:3px;"></div>
+        <div>
+          <div style="font-size:10px;color:#64748b;letter-spacing:2px;margin-bottom:6px;">0${i+1}</div>
+          <div style="font-size:16px;font-weight:700;color:#e2e8f0;margin-bottom:16px;">${slide.title}</div>
+          ${slide.highlight ? `<div style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:6px;padding:8px 14px;font-size:14px;color:#93c5fd;margin-bottom:14px;">${slide.highlight}</div>` : ''}
+          <ul style="margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:8px;">
+            ${(slide.bullets||[]).map(b => `<li style="color:#cbd5e1;font-size:13px;line-height:1.6;">${b}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+      preview.appendChild(el);
+    });
+
+    preview.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  async function downloadSlides() {
+    if (!_slideData) { alert('先にスライドを生成してください'); return; }
+
+    const btn = document.getElementById('downloadBtn');
+    btn.textContent = '⏳ 生成中...';
+    btn.disabled = true;
+
+    try {
+      // pptxgenjsをCDNから読み込む
+      await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+
+      const pres = new PptxGenJS();
+      pres.layout = 'LAYOUT_16x9';
+      pres.title = _slideData.title;
+      pres.author = _slideData.presenter;
+
+      const NAVY = '1a237e';
+      const BLUE = '1565c0';
+      const WHITE = 'FFFFFF';
+      const LIGHT = 'e3f2fd';
+      const TEXT = '1e2a3a';
+      const SUB = '546e7a';
+
+      // 表紙
+      const cover = pres.addSlide();
+      cover.addShape(pres.ShapeType.rect, {x:0, y:0, w:10, h:5.625, fill:{color:NAVY}});
+      cover.addShape(pres.ShapeType.rect, {x:0, y:4.2, w:10, h:1.425, fill:{color:BLUE}});
+      cover.addShape(pres.ShapeType.rect, {x:0.6, y:1.2, w:0.06, h:2.4, fill:{color:'42a5f5'}});
+      cover.addText('PROPOSAL', {x:0.8, y:1.2, w:8, h:0.4, color:'90caf9', fontSize:11, charSpacing:6, margin:0});
+      cover.addText(_slideData.title, {x:0.8, y:1.7, w:8.5, h:1.2, color:WHITE, fontSize:30, bold:true, margin:0});
+      cover.addText(_slideData.subtitle, {x:0.8, y:2.95, w:8, h:0.5, color:'bbdefb', fontSize:14, margin:0});
+      cover.addText(`${_slideData.presenter}　/　${_slideData.date}`, {x:0.8, y:4.35, w:8, h:0.4, color:'e3f2fd', fontSize:12, margin:0});
+
+      // セクションスライド
+      _slideData.slides.forEach((slide, i) => {
+        const s = pres.addSlide();
+
+        // 背景
+        s.addShape(pres.ShapeType.rect, {x:0, y:0, w:10, h:5.625, fill:{color:'f8fafc'}});
+        // 左アクセントバー
+        s.addShape(pres.ShapeType.rect, {x:0, y:0, w:0.08, h:5.625, fill:{color:BLUE}});
+        // 上部ヘッダー帯
+        s.addShape(pres.ShapeType.rect, {x:0, y:0, w:10, h:1.0, fill:{color:NAVY}});
+        // スライド番号
+        s.addText(`0${i+1}`, {x:0.2, y:0.15, w:0.7, h:0.65, color:'90caf9', fontSize:20, bold:true, margin:0});
+        // タイトル
+        s.addText(slide.title, {x:1.0, y:0.15, w:8.8, h:0.7, color:WHITE, fontSize:20, bold:true, margin:0});
+        // ハイライトボックス（任意）
+        let contentY = 1.2;
+        if (slide.highlight) {
+          s.addShape(pres.ShapeType.rect, {x:0.5, y:1.15, w:9, h:0.65, fill:{color:'e3f2fd'}, line:{color:'90caf9', pt:1}});
+          s.addText(slide.highlight, {x:0.6, y:1.2, w:8.8, h:0.55, color:BLUE, fontSize:13, bold:true, margin:0});
+          contentY = 1.95;
+        }
+        // 箇条書き
+        const bullets = (slide.bullets||[]).filter(b=>b.trim());
+        if (bullets.length) {
+          const items = bullets.map((b, bi) => [
+            {text: `${['●','●','●','●'][bi]||'●'} `, options:{color:BLUE, fontSize:13, bold:true, breakLine:false}},
+            {text: b, options:{color:TEXT, fontSize:13, breakLine: bi < bullets.length-1}}
+          ]).flat();
+          s.addText(items, {x:0.6, y:contentY, w:8.8, h:5.625-contentY-0.4, valign:'top', margin:0, lineSpacingMultiple:1.4});
+        }
+        // フッター
+        s.addText(`${_slideData.presenter}　|　${_slideData.date}`, {x:0.2, y:5.3, w:9.6, h:0.25, color:SUB, fontSize:9, align:'right', margin:0});
+      });
+
+      // 最終スライド（ありがとうページ）
+      const last = pres.addSlide();
+      last.addShape(pres.ShapeType.rect, {x:0, y:0, w:10, h:5.625, fill:{color:NAVY}});
+      last.addShape(pres.ShapeType.rect, {x:0, y:2.4, w:10, h:0.06, fill:{color:'42a5f5'}});
+      last.addText('ご清聴ありがとうございました', {x:1, y:1.5, w:8, h:0.8, color:WHITE, fontSize:24, bold:true, align:'center', margin:0});
+      last.addText('ご不明点はお気軽にお申し付けください', {x:1, y:2.6, w:8, h:0.5, color:'90caf9', fontSize:14, align:'center', margin:0});
+      last.addText(`${_slideData.presenter}`, {x:1, y:4.2, w:8, h:0.4, color:'bbdefb', fontSize:13, align:'center', margin:0});
+
+      const filename = `提案書_${document.getElementById('client').value.trim()||'クライアント'}_${_slideData.date}.pptx`;
+      await pres.writeFile({fileName: filename});
+
+    } catch(e) {
+      alert('スライド生成エラー: ' + e.message);
+    }
+
+    btn.textContent = '⬇ PPTXダウンロード';
+    btn.disabled = false;
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
     });
   }
 </script>
