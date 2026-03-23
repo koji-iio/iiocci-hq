@@ -776,6 +776,14 @@
       if (api) checked = await api.readPhase1();
     } catch(e) {}
 
+    // GASから取得できなかった場合はlocalStorageにフォールバック
+    if (!checked.some(Boolean)) {
+      const saved = localStorage.getItem('iiocci-phase1-tasks');
+      if (saved) {
+        try { const ls = JSON.parse(saved); if (ls.some(Boolean)) checked = ls; } catch(e) {}
+      }
+    }
+
     const done = checked.filter(Boolean).length;
     phaseItems.forEach((id, i) => {
       const el = document.getElementById(id);
@@ -831,9 +839,8 @@
     btn.textContent = '送信 →';
   }
 
-  // Init
-  loadStats();
-  loadPhase();
+  // Init（GASへの並行リクエスト競合を避けるため順次実行）
+  loadPhase().then(() => loadStats());
 </script>
 </body>
 </html>
