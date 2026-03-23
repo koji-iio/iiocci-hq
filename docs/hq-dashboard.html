@@ -830,11 +830,10 @@
       const _api = createApi();
       if (!_api) { out.textContent = 'GAS URLが未設定です。settings.htmlで接続設定をしてください。'; btn.disabled = false; btn.textContent = '送信 →'; return; }
 
-      try {
-        const systemPrompt = `あなたは個人事業主「飯尾航史」の専属AIオーケストレーターです。
+      const systemPrompt = `あなたは個人事業主「飯尾航史」の専属AIオーケストレーターです。
 プロフィール：トヨタ自動車九州DX推進部・グロービスMBA・生成AI/DX/Tableau/変革マネジメントが強み。副業コンサルを今月スタートしたばかり。月1〜2件のスポット相談から始める段階。
 役割：飯尾航史の事業活動全般のブレイン。短く実用的なアドバイスを日本語で。絵文字を適度に使って読みやすく。300字以内で。`;
-        out.textContent = await _api.callClaude([{ role: 'user', content: input }], systemPrompt);
+      out.textContent = await _api.callClaude([{ role: 'user', content: input }], systemPrompt);
     } catch(e) {
       out.textContent = 'エラーが発生しました。再試行してください。';
     }
