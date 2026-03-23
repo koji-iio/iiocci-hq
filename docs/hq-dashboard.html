@@ -771,17 +771,20 @@
   const phaseItems = ['pi-rule','pi-open','pi-menu','pi-sns','pi-match'];
 
   async function loadPhase() {
+    const _api = createApi();
     let checked = new Array(17).fill(false);
-    try {
-      if (api) checked = await api.readPhase1();
-    } catch(e) {}
 
-    // GASから取得できなかった場合はlocalStorageにフォールバック
-    if (!checked.some(Boolean)) {
-      const saved = localStorage.getItem('iiocci-phase1-tasks');
-      if (saved) {
-        try { const ls = JSON.parse(saved); if (ls.some(Boolean)) checked = ls; } catch(e) {}
-      }
+    const saved = localStorage.getItem('iiocci-phase1-tasks');
+    if (saved) {
+      try { checked = JSON.parse(saved); } catch(e) {}
+    }
+
+    if (_api) {
+      try {
+        const gasChecked = await _api.readPhase1();
+        if (gasChecked && Array.isArray(gasChecked)) checked = gasChecked;
+        localStorage.setItem('iiocci-phase1-tasks', JSON.stringify(checked));
+      } catch(e) {}
     }
 
     const done = checked.filter(Boolean).length;
