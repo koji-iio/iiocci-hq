@@ -845,6 +845,25 @@
   }
 
   // Init（GASへの並行リクエスト競合を避けるため順次実行）
+  // まずlocalStorageで即表示してからGASで更新
+  (() => {
+    const saved = localStorage.getItem('iiocci-phase1-tasks');
+    if (saved) {
+      try {
+        const checked = JSON.parse(saved);
+        const done = checked.filter(Boolean).length;
+        const pct = Math.round((done / 17) * 100);
+        document.getElementById('phasePct').textContent = pct + '%';
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('kpi-phase').textContent = pct + '%';
+        ['pi-rule','pi-open','pi-menu','pi-sns','pi-match'].forEach((id, i) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (checked[i]) { el.classList.add('done'); el.querySelector('.pi-check').textContent = '✓'; }
+        });
+      } catch(e) {}
+    }
+  })();
   loadPhase().then(() => loadStats());
 </script>
 </body>
